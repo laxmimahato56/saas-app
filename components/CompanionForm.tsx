@@ -17,6 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "./ui/select";
 import { SelectValue } from "@radix-ui/react-select";
 import { subjects } from "@/constants";
 import { Textarea } from "./ui/textarea";
+import { createCompanion } from "@/lib/actions/companion.actions";
+import { redirect } from "next/navigation";
 
 const formSchema = z.object({
   name: z.string().min(1, { message: "Companion is required" }),
@@ -31,7 +33,8 @@ type FormData = z.infer<typeof formSchema>;
 
 const CompanionForm = () => {
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
       name: "",
       subject: "",
@@ -42,8 +45,14 @@ const CompanionForm = () => {
     },
   });
 
-  const onSubmit = (values: FormData) => {
-    console.log(values);
+  const onSubmit = async (values: FormData) => {
+    const companion = await createCompanion(values);
+    if (companion) {
+      redirect("/companions/" + companion.id);
+    } else {
+      console.log("Failed to create a companion");
+      redirect("/");
+    }
   };
 
   return (
